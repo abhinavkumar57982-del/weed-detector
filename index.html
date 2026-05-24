@@ -1,0 +1,927 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeedDetect AI 🌿 | Weed Detection System</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0a192f;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(231, 76, 60, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(192, 57, 43, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* Floating Weed Animation */
+        .weed-leaf {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 100% 0 100% 0;
+            transform: rotate(45deg);
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(45deg); }
+            50% { transform: translateY(-20px) rotate(55deg); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Header Section */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 50%, #e67e22 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #4a5568;
+            font-weight: 300;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .badge-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border-radius: 50px;
+            font-size: 0.9em;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .badge i {
+            font-size: 1em;
+        }
+
+        /* Stats Cards - Weed Only */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            padding: 25px;
+            border-radius: 20px;
+            color: white;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 30px rgba(231, 76, 60, 0.3);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(231, 76, 60, 0.4);
+        }
+
+        .stat-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        /* Upload Methods Grid */
+        .methods-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .method-card {
+            background: #f8fafd;
+            padding: 25px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .method-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .method-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .method-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-color: #e2e8f0;
+        }
+
+        .method-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .method-icon i {
+            font-size: 2em;
+            color: white;
+        }
+
+        .method-card h3 {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .method-card p {
+            color: #718096;
+            font-size: 0.9em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        /* Input Styles */
+        .file-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .file-label {
+            display: block;
+            padding: 15px 20px;
+            background: white;
+            border: 2px dashed #e74c3c;
+            border-radius: 10px;
+            text-align: center;
+            color: #4a5568;
+            transition: all 0.3s;
+            cursor: pointer;
+            z-index: 1;
+            font-weight: 500;
+        }
+
+        .file-label i {
+            margin-right: 10px;
+            color: #e74c3c;
+        }
+
+        .file-label:hover {
+            border-color: #c0392b;
+            background: #f7fafc;
+        }
+
+        .url-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+        }
+
+        .btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
+        }
+
+        .btn-outline:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* Paste Area */
+        .paste-area {
+            min-height: 100px;
+            padding: 30px;
+            background: white;
+            border: 2px dashed #e74c3c;
+            border-radius: 10px;
+            text-align: center;
+            color: #718096;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .paste-area:focus {
+            outline: none;
+            border-color: #c0392b;
+            background: #f7fafc;
+        }
+
+        .paste-area i {
+            font-size: 2em;
+            color: #e74c3c;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Drag Drop Area */
+        .drag-drop {
+            border: 3px dashed #e74c3c;
+            padding: 40px;
+            text-align: center;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+            color: #c0392b;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .drag-drop i {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+            color: #e74c3c;
+        }
+
+        .drag-drop:hover {
+            transform: scale(1.02);
+            border-color: #c0392b;
+            background: linear-gradient(135deg, #ffe6e6 0%, #fff5f5 100%);
+        }
+
+        /* Loading Spinner */
+        #loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #e74c3c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Image Gallery */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .image-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-header {
+            padding: 15px;
+            background: #f8fafd;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .image-header i {
+            font-size: 1.2em;
+            color: #e74c3c;
+        }
+
+        .image-header h3 {
+            font-size: 1em;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .image-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Results Section */
+        .results-section {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            padding: 30px;
+            border-radius: 20px;
+            color: white;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .results-header i {
+            font-size: 2em;
+        }
+
+        .results-header h2 {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .detection-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .detection-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .detection-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .detection-info {
+            flex: 1;
+        }
+
+        .detection-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .detection-confidence {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .confidence-bar {
+            width: 100px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: white;
+            border-radius: 3px;
+        }
+
+        .stats-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            font-size: 0.9em;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .methods-grid,
+            .image-gallery {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .url-input-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Weed Leaves -->
+    <div class="weed-leaf" style="top: 10%; left: 5%; animation: float 6s infinite;"></div>
+    <div class="weed-leaf" style="top: 20%; right: 8%; animation: float 8s infinite;"></div>
+    <div class="weed-leaf" style="bottom: 15%; left: 10%; animation: float 7s infinite;"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🌿 WeedDetect AI</h1>
+            <p>Advanced weed detection system for precision agriculture - Identify and locate weeds in your fields</p>
+            
+            <div class="badge-container">
+                <span class="badge"><i class="fas fa-check-circle"></i> Weed Only Detection</span>
+                <span class="badge"><i class="fas fa-bolt"></i> Real-time Results</span>
+                <span class="badge"><i class="fas fa-leaf"></i> Sustainable Farming</span>
+            </div>
+        </div>
+
+        <!-- Stats Cards - Only Weed -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-value" id="weedCount">0</div>
+                <div class="stat-label">Weeds Detected</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-value" id="processingTime">0</div>
+                <div class="stat-label">Processing Time (s)</div>
+            </div>
+        </div>
+
+        <!-- Upload Methods -->
+        <div class="methods-grid">
+            <!-- Method 1: File Upload -->
+            <div class="method-card">
+                <div class="method-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                <h3><i class="fas fa-file-image" style="margin-right: 8px;"></i> File Upload</h3>
+                <p>Upload images directly from your device. Supports JPG, PNG, and GIF formats up to 16MB.</p>
+                <div class="file-input-wrapper">
+                    <input type="file" id="imageInput" accept="image/*" class="file-input">
+                    <label for="imageInput" class="file-label">
+                        <i class="fas fa-folder-open"></i> Choose Image
+                    </label>
+                </div>
+                <button onclick="uploadImage()" id="detectBtn" class="btn" style="width: 100%; margin-top: 15px;">
+                    <i class="fas fa-search"></i> Detect Weeds
+                </button>
+            </div>
+
+            <!-- Method 2: URL Upload -->
+            <div class="method-card">
+                <div class="method-icon"><i class="fas fa-link"></i></div>
+                <h3><i class="fas fa-globe" style="margin-right: 8px;"></i> URL Upload</h3>
+                <p>Paste any image URL from the web. Right-click on any image and select "Copy image link".</p>
+                <div class="url-input-group">
+                    <input type="url" id="imageUrl" class="url-input" placeholder="https://example.com/image.jpg">
+                    <button onclick="uploadFromUrl()" class="btn btn-outline">
+                        <i class="fas fa-download"></i> Upload
+                    </button>
+                </div>
+            </div>
+
+            <!-- Method 3: Paste Image -->
+            <div class="method-card">
+                <div class="method-icon"><i class="fas fa-clipboard"></i></div>
+                <h3><i class="fas fa-paste" style="margin-right: 8px;"></i> Paste Image</h3>
+                <p>Copy an image (Ctrl+C) and paste it directly (Ctrl+V). Works with images from any source.</p>
+                <div id="pasteArea" class="paste-area" contenteditable="true">
+                    <i class="fas fa-image"></i>
+                    Click here and press Ctrl+V to paste image
+                </div>
+                <button onclick="pasteImage()" class="btn" style="width: 100%;">
+                    <i class="fas fa-magic"></i> Process Pasted Image
+                </button>
+            </div>
+
+            <!-- Method 4: Drag & Drop -->
+            <div class="method-card">
+                <div class="method-icon"><i class="fas fa-hand-pointer"></i></div>
+                <h3><i class="fas fa-arrows-alt" style="margin-right: 8px;"></i> Drag & Drop</h3>
+                <p>Simply drag and drop any image directly into the area below. Fast and intuitive.</p>
+                <div class="drag-drop" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)">
+                    <i class="fas fa-cloud-download-alt"></i>
+                    Drop your image here
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" style="display:none;">
+            <div class="spinner"></div>
+            <p style="color: #e74c3c; font-weight: 500;">Analyzing image for weeds...</p>
+            <p style="color: #718096; font-size: 0.9em;">This may take 10-30 seconds</p>
+        </div>
+
+        <!-- Image Gallery -->
+        <div class="image-gallery" id="imageContainer" style="display:none;">
+            <div class="image-card">
+                <div class="image-header">
+                    <i class="fas fa-image"></i>
+                    <h3>Original Image</h3>
+                </div>
+                <img id="original" alt="Original uploaded image">
+            </div>
+            <div class="image-card">
+                <div class="image-header">
+                    <i class="fas fa-robot"></i>
+                    <h3>Weed Detection Results</h3>
+                </div>
+                <img id="annotated" alt="Image with weed detections">
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="result" class="results-section" style="display:none;">
+            <div class="results-header">
+                <i class="fas fa-chart-bar"></i>
+                <h2>Weed Detection Results</h2>
+            </div>
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Variables
+        let pastedImageData = null;
+        let currentFile = null;
+        
+        // File input change
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            currentFile = e.target.files[0];
+            if (currentFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('original').src = e.target.result;
+                    document.getElementById('imageContainer').style.display = 'grid';
+                };
+                reader.readAsDataURL(currentFile);
+            }
+        });
+        
+        // Paste handler
+        document.getElementById('pasteArea').addEventListener('paste', function(e) {
+            e.preventDefault();
+            const items = e.clipboardData.items;
+            for (let item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('original').src = e.target.result;
+                        document.getElementById('imageContainer').style.display = 'grid';
+                        pastedImageData = e.target.result.split(',')[1];
+                        currentFile = blob;
+                        
+                        // Visual feedback
+                        document.getElementById('pasteArea').innerHTML = '<i class="fas fa-check-circle" style="color: #e74c3c;"></i> Image pasted successfully!';
+                    };
+                    reader.readAsDataURL(blob);
+                    break;
+                }
+            }
+        });
+        
+        // Drag & Drop handlers
+        function dragOverHandler(e) {
+            e.preventDefault();
+        }
+        
+        function dropHandler(e) {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                currentFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('original').src = e.target.result;
+                    document.getElementById('imageContainer').style.display = 'grid';
+                    
+                    // Auto-detect on drop
+                    uploadImage();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // URL upload
+        async function uploadFromUrl() {
+            const url = document.getElementById('imageUrl').value;
+            if (!url) {
+                showNotification('Please enter an image URL', 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/upload-url', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url: url})
+                });
+                
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                
+                // Fetch the image
+                const imgResponse = await fetch(`/uploads/${data.filename}`);
+                const blob = await imgResponse.blob();
+                currentFile = new File([blob], data.filename, {type: blob.type});
+                
+                // Preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('original').src = e.target.result;
+                    document.getElementById('imageContainer').style.display = 'grid';
+                    uploadImage(); // Auto detect
+                };
+                reader.readAsDataURL(blob);
+                
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
+                showLoading(false);
+            }
+        }
+        
+        // Paste image
+        async function pasteImage() {
+            if (!currentFile && !pastedImageData) {
+                showNotification('Please paste an image first (Ctrl+V)!', 'error');
+                return;
+            }
+            
+            if (pastedImageData && !currentFile) {
+                // Convert base64 to file
+                const byteCharacters = atob(pastedImageData);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {type: 'image/png'});
+                currentFile = new File([blob], 'pasted_image.png', {type: 'image/png'});
+            }
+            
+            await uploadImage();
+        }
+        
+        // Main upload function
+        async function uploadImage() {
+            if (!currentFile) {
+                showNotification('Please select an image first!', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            
+            showLoading(true);
+            document.getElementById('detectBtn').disabled = true;
+            
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                // Calculate processing time
+                const processingTime = ((Date.now() - startTime) / 1000).toFixed(1);
+                document.getElementById('processingTime').textContent = processingTime + 's';
+                
+                // Update stats - Only Weed
+                document.getElementById('weedCount').textContent = data.weed_count || 0;
+                
+                // Build results HTML - Only Weed
+                let html = '';
+                
+                if (data.result && data.result.length > 0) {
+                    html += '<div style="margin-bottom: 20px;">';
+                    data.result.forEach(item => {
+                        html += `<div class="stats-badge" style="background: rgba(255, 255, 255, 0.2); margin-bottom: 10px;">
+                            <i class="fas fa-exclamation-triangle"></i> ${item}
+                        </div>`;
+                    });
+                    html += '</div>';
+                }
+                
+                if (data.detections && data.detections.length > 0) {
+                    html += '<h3 style="margin-bottom: 15px;">🌿 Weeds Detected</h3>';
+                    html += '<div class="detection-list">';
+                    
+                    data.detections.forEach(d => {
+                        const confValue = parseFloat(d.confidence);
+                        
+                        html += `
+                            <div class="detection-item">
+                                <div class="detection-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="detection-info">
+                                    <div class="detection-title">🌿 Weed</div>
+                                    <div class="detection-confidence">Confidence: ${d.confidence}</div>
+                                </div>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: ${confValue}%;"></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                }
+                
+                if (data.weed_count > 0) {
+                    html += `
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.2); border-radius: 10px; text-align: center;">
+                            <i class="fas fa-exclamation-circle" style="font-size: 1.5em; margin-right: 10px;"></i>
+                            <strong>⚠️ Action Required: ${data.weed_count} weed(s) detected!</strong>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.2); border-radius: 10px; text-align: center;">
+                            <i class="fas fa-check-circle" style="font-size: 1.5em; margin-right: 10px;"></i>
+                            <strong>✅ No weeds detected! Field is clean.</strong>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('resultContent').innerHTML = html;
+                document.getElementById('result').style.display = 'block';
+                
+                if (data.annotated_image) {
+                    document.getElementById('annotated').src = data.annotated_image;
+                }
+                
+                showNotification('Analysis complete!', 'success');
+                
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+                document.getElementById('detectBtn').disabled = false;
+            }
+        }
+        
+        // Helper functions
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+        
+        function showNotification(message, type) {
+            console.log(message);
+            alert(message);
+        }
+    </script>
+</body>
+</html>
